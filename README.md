@@ -24,8 +24,8 @@ Follow the steps below to download, set up, and run NewsXpress on your local mac
 Clone the repo:
 
 ```bash
-git clone https://github.com/your-username/newsxpress.git
-cd newsxpress
+git clone https://github.com/Pugaz2006/NewsXpress.git
+cd NewsXpress
 ```
 
 Or download the ZIP file, extract it, and open the folder in a code editor.
@@ -60,10 +60,10 @@ This installs everything listed in `package.json`.
 
 ### 4. Create `.env` File and Add API Key
 
-Create a file named `.env` in the root directory and add your [NewsAPI](https://newsapi.org/) key:
+Create a file named `.env` in the Server directory and add your [NewsAPI](https://newsapi.org/) key:
 
 ```env
-VITE_NEWS_API_KEY=your_newsapi_key_here
+NEWS_API_KEY=your_newsapi_key_here
 ```
 
 You can get a free API key by signing up at [https://newsapi.org](https://newsapi.org).
@@ -79,7 +79,7 @@ npm run dev
 ```
 
 Then open your browser and go to:
-👉 `http://localhost:5173/`
+👉 `http://localhost:3000/`
 
 ---
 
