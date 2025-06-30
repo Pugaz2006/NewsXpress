@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* index.css or App.css */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #0d1117; /* Matches NAVBAR gradient start */
+  overscroll-behavior: none; /* allow bounce */
+  color: white;
 }
