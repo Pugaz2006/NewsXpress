@@ -1,6 +1,5 @@
 import React from "react";
 import { categories } from "../constants/categories";
-// import { Bookmark } from "./Bookmark";
 const Navbar = ({
   activeCategory,
   showCategory,

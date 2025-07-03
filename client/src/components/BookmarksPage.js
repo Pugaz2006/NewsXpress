@@ -1,34 +1,4 @@
-// import React, { useEffect, useState } from "react";
-// import NewsCard from "./NewsCard";
 
-// const BookmarksPage = () => {
-//   const [bookmarks, setBookmarks] = useState([]);
-
-//   const refreshBookmarks = () => {
-//     fetch("http://localhost:5000/api/bookmarks")
-//       .then(res => res.json())
-//       .then(data => setBookmarks(data));
-//   };
-
-//   useEffect(() => {
-//     refreshBookmarks();
-//   }, []);
-
-//   return (
-//     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-//       {bookmarks.map((item) => (
-//         <NewsCard
-//           key={item._id}
-//           {...item}
-//           bookmarked={true}
-//           refreshBookmarks={refreshBookmarks}
-//         />
-//       ))}
-//     </div>
-//   );
-// };
-
-// export default BookmarksPage;
 import React, { useEffect, useState } from "react";
 import NewsCard from "./NewsCard";
 

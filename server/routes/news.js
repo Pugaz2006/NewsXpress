@@ -1,10 +1,4 @@
-// const express = require('express');
-// const router = express.Router();
-// const { getCombinedNews } = require('../controllers/newsController');
 
-// router.get('/', getCombinedNews);
-
-// module.exports = router;
 const express = require("express");
 const router = express.Router();
 const parseFeeds = require("../utils/rssParser");
