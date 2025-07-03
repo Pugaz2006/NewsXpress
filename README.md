@@ -99,7 +99,7 @@ Then open your browser and go to:
 | ------------------------------- | ------------------------------- | --------------------------------------- |
 | ![Home](./screenshots/home.png) | ![Dark](./screenshots/dark.png) | ![Bookmark](./screenshots/bookmark.png) |
 
-> Ensure you add the screenshots under a `/screenshots` folder in your project.
+
 
 ---
 

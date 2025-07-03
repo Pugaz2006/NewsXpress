@@ -49,7 +49,7 @@ const Navbar = ({
 </button>
           <div className="flex justify-center">
           <select
-            className=" text-center w-32 font-medium px-0 py-1 rounded-xl border-collapse border-gray-300  text-white shadow-sm bg-blue-500 dark:bg-yellow-400 dark:text-black"
+            className=" text-center w-32 font-medium px-2 py-1 rounded-xl border-collapse border-gray-300  text-white shadow-sm bg-blue-500 dark:bg-yellow-400 dark:text-black"
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
           >
@@ -58,7 +58,6 @@ const Navbar = ({
             <option value="ta">தமிழ்</option>
             <option value="te">తెలుగు</option>
             <option value="mr">मराठी</option>
-            <option value="ml">മലയാളം</option>
           </select>
           </div>
           {/* Theme Toggle */}

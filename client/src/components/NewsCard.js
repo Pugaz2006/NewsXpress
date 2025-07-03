@@ -1,75 +1,108 @@
 import React, { useState, useEffect } from "react";
 
-const NewsCard = ({ title, description, imageUrl, source, url }) => {
-  const [bookmarked, setBookmarked] = useState(false);
-  const [bookmarkId, setBookmarkId] = useState(null); // track Mongo ID for delete
+const NewsCard = ({ title, description, imageUrl, source, url, pubDate, isBookmarked, refreshBookmarks, hideStar }) => {
+  const [bookmarked, setBookmarked] = useState(isBookmarked);
 
   useEffect(() => {
-    // Check if this article is already bookmarked
-    fetch("http://localhost:5000/api/bookmarks")
-      .then(res => res.json())
-      .then(data => {
-        const match = data.find(item => item.url === url);
-        if (match) {
-          setBookmarked(true);
-          setBookmarkId(match._id);
-        }
-      });
+    const saved = JSON.parse(localStorage.getItem("bookmarkedNews")) || [];
+    const exists = saved.some((item) => item.link === url);
+    setBookmarked(exists);
   }, [url]);
 
-  const handleBookmarkToggle = async () => {
-    if (!bookmarked) {
-      // Add to bookmarks
-      try {
-        const res = await fetch("http://localhost:5000/api/bookmarks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, description, imageUrl, source, url }),
-        });
-        const data = await res.json();
-        setBookmarkId(data._id);
-        setBookmarked(true);
-      } catch (err) {
-        console.error("Bookmark failed:", err);
-      }
-    } else {
-      // Remove from bookmarks
-      try {
-        await fetch(`http://localhost:5000/api/bookmarks/${bookmarkId}`, {
-          method: "DELETE",
-        });
-        setBookmarked(false);
-        setBookmarkId(null);
-      } catch (err) {
-        console.error("Unbookmark failed:", err);
-      }
-    }
-  };
+  const handleBookmarkToggle = (e) => {
+  e.preventDefault(); // prevent anchor click
+
+  const saved = JSON.parse(localStorage.getItem("bookmarkedNews")) || [];
+  let updated;
+
+  if (!bookmarked) {
+    const article = { title, description, image: imageUrl, source, link: url, pubDate };
+    // prevent duplicates
+    updated = [...saved.filter(n => n.link !== url), article];
+    setBookmarked(true);
+  } else {
+    updated = saved.filter(n => n.link !== url);
+    setBookmarked(false);
+  }
+
+  localStorage.setItem("bookmarkedNews", JSON.stringify(updated));
+  if (refreshBookmarks) refreshBookmarks(); // update App state
+};
+
 
   return (
-    <div className="bg-white/30 dark:bg-white/10 backdrop-blur-md border border-white/30 rounded-lg overflow-hidden shadow-xl transform transition duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
-      <img src={imageUrl} alt="news" className="w-full h-48 object-cover" />
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <h2 className="text-xl font-semibold mb-2">{title}</h2>
-          <button
-            onClick={handleBookmarkToggle}
-            className="text-2xl transition-colors"
-            title={bookmarked ? "Remove bookmark" : "Add to bookmarks"}
-          >
-            <span
-              className={`transition-colors ${
-                bookmarked ? "text-yellow-400" : "text-gray-400 hover:text-yellow-400"
-              }`}
-            >
-              ★
-            </span>
-          </button>
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block h-full"
+    >
+      <div className="bg-[#e4e4e4] dark:bg-white/10 backdrop-blur-md border border-white/30 rounded-lg overflow-hidden shadow-xl transform transition duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col">
+        {/* Image section */}
+        <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+          <img
+  src={imageUrl || "/news_img.webp"}
+  alt="news"
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "/news_img.webp";
+  }}
+  className="w-full h-full object-cover"
+/>
+
         </div>
-        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{description}</p>
-        <div className="text-xs text-gray-500">Source: {source}</div>
+
+        {/* Content */}
+        <div className="p-4 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-xl font-semibold line-clamp-2 min-h-[2.75em] text-black dark:text-white">
+              {title}
+            </h2>
+            {!hideStar && (
+              <button
+                // onClick={handleBookmarkToggle,alert("hi")}
+                onClick={(e) => {
+                          handleBookmarkToggle(e);
+                          if(!bookmarked)alert("Added to bookmark");
+                        }}
+
+                className="text-2xl transition-colors"
+                title={bookmarked ? "Remove bookmark" : "Add to bookmarks"}
+              >
+                <span
+                  className={`transition-colors ${
+                    bookmarked
+                      ? "text-yellow-400"
+                      : "text-gray-400 hover:text-yellow-400"
+                  }`}
+                >
+                  ★
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* PubDate */}
+          {pubDate && (
+            <div className="text-xs text-gray-400 mb-2">
+              🗓️{" "}
+              {new Date(pubDate).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </div>
+          )}
+
+          {/* Description */}
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-3 min-h-[4.5em]">
+            {description}
+          </p>
+
+          {/* Source */}
+          <div className="text-xs text-gray-500 mt-auto">Source: {source}</div>
+        </div>
       </div>
-    </div>
+    </a>
   );
 };
 
