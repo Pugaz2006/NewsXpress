@@ -113,8 +113,6 @@ function detectSource(link, lang) {
 }
 
 
-// const fallback = "https://tse2.mm.bing.net/th/id/OIP.sujvaw9jN9QLxiubmM0MTQAAAA?rs=1&pid=ImgDetMain&o=7&rm=3";
-
 // 🗓️ Only today’s news
 function isToday(pubDateStr) {
   const pubDate = new Date(pubDateStr);
