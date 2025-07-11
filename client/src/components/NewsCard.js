@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const NewsCard = ({ title, description, imageUrl, source, url, pubDate, isBookmarked, refreshBookmarks, hideStar }) => {
+const NewsCard = ({ title, description, imageUrl, image, source, url, pubDate, isBookmarked, refreshBookmarks, hideStar }) => {
   const [bookmarked, setBookmarked] = useState(isBookmarked);
 
   useEffect(() => {
@@ -9,15 +9,60 @@ const NewsCard = ({ title, description, imageUrl, source, url, pubDate, isBookma
     setBookmarked(exists);
   }, [url]);
 
-  const handleBookmarkToggle = (e) => {
+  const validateBookmark = (article) => {
+  const requiredSchema = {
+    title: "string",
+    description: "string",
+    link: "string",
+    pubDate: "string"
+  };
+
+  // Validate required fields
+  for (const key in requiredSchema) {
+    if (
+      !article.hasOwnProperty(key) ||
+      typeof article[key] !== requiredSchema[key]
+    ) {
+      console.warn(`Validation failed: missing or wrong type for "${key}"`);
+      return false;
+    }
+  }
+
+  // Optional fields
+  if (
+    article.hasOwnProperty("image") &&
+    typeof article.image !== "string"
+  ) return false;
+
+  if (
+    article.hasOwnProperty("source") &&
+    typeof article.source !== "string"
+  ) return false;
+console.log("✅ JSON validated successfully");
+  return true;
+};
+
+const handleBookmarkToggle = (e) => {
   e.preventDefault(); // prevent anchor click
 
   const saved = JSON.parse(localStorage.getItem("bookmarkedNews")) || [];
   let updated;
 
   if (!bookmarked) {
-    const article = { title, description, image: imageUrl, source, link: url, pubDate };
-    // prevent duplicates
+    const article = {
+      title,
+      description,
+      image: imageUrl, // fallback
+      source: source || "General",
+      link: url,
+      pubDate
+    };
+
+    if (!validateBookmark(article)) {
+      alert("This article is missing required fields and was not saved.");
+      return;
+    }
+
     updated = [...saved.filter(n => n.link !== url), article];
     setBookmarked(true);
   } else {
@@ -28,6 +73,7 @@ const NewsCard = ({ title, description, imageUrl, source, url, pubDate, isBookma
   localStorage.setItem("bookmarkedNews", JSON.stringify(updated));
   if (refreshBookmarks) refreshBookmarks(); // update App state
 };
+
 
 
   return (
@@ -41,13 +87,16 @@ const NewsCard = ({ title, description, imageUrl, source, url, pubDate, isBookma
         {/* Image section */}
         <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
           <img
-  src={imageUrl || "/news_img.webp"}
+  src={imageUrl || image|| "/news_img.webp"}
   alt="news"
+  loading="lazy"
   onError={(e) => {
     e.target.onerror = null;
     e.target.src = "/news_img.webp";
   }}
-  className="w-full h-full object-cover"
+   width="400"
+  height="270"
+  className="w-full h-48 object-cover rounded"
 />
 
         </div>

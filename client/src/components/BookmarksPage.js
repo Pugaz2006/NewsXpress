@@ -7,6 +7,10 @@ const BookmarksPage = () => {
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("bookmarkedNews")) || [];
+     if (saved.length > 0) {
+    const sizeInBytes = JSON.stringify(saved[0]).length;
+    console.log(`First bookmark size: ${sizeInBytes} bytes (${(sizeInBytes/1024).toFixed(2)} KB)`);
+  }
     setBookmarks(saved);
   }, []);
 

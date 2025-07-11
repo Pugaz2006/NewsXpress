@@ -1,4 +1,4 @@
-import React from "react";
+import React ,{useRef} from "react";
 import { categories } from "../constants/categories";
 const Navbar = ({
   activeCategory,
@@ -7,13 +7,29 @@ const Navbar = ({
   setSearchText,
   selectedLanguage,
   setSelectedLanguage,
+  setBatch,
   isDark,
-  setIsDark
+  setIsDark,
+  resetToHome,
 }) => {
+  const searchInputRef = useRef();
+
+  // Helper to clear search input
+  const clearSearchInput = () => {
+    if (searchInputRef.current) searchInputRef.current.value = "";
+  };
+
   return (
     <nav className="bg-[#e4e4e4] dark:bg-[#161b22] shadow-md sticky top-0 z-50 border-b border-gray-300 dark:border-gray-800">
       <div className="w-full flex justify-between items-center px-4 py-3 flex-wrap gap-4">
-        <div className="text-4xl px-8 font-bold cursor-pointer" onClick={() => showCategory("all")}>
+        <div
+          className="text-4xl px-8 font-bold cursor-pointer"
+          onClick={() => {
+            resetToHome();
+            setSearchText("");
+            clearSearchInput();
+          }}
+        >
           NewsXpress
         </div>
 
@@ -21,7 +37,11 @@ const Navbar = ({
           {categories.map((cat) => (
             <li
               key={cat}
-              onClick={() => showCategory(cat)}
+              onClick={() => {
+                setSearchText("");
+                clearSearchInput();
+                showCategory(cat);
+              }}
               className={`cursor-pointer capitalize transition-colors ${
                 activeCategory === cat
                   ? "text-blue-700 font-semibold dark:text-yellow-300 font-semibold"
@@ -36,28 +56,38 @@ const Navbar = ({
         <div className="flex items-center gap-2">
           <input
             type="text"
-            className="px-3 py-1 rounded border border-gray-300 text-black dark:text-white bg-white dark:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-yellow-400"
+            className="px-3 py-1 rounded border border-gray-300 text-black dark:text-black bg-white dark:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-yellow-400"
             placeholder="Search news..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            ref={searchInputRef}
           />
           <button
-  className="font-medium px-4 py-1 rounded transition-all bg-blue-500 text-white hover:bg-blue-600 dark:bg-yellow-400 dark:text-black dark:hover:bg-yellow-500"
->
-  Search
-</button>
-          <div className="flex justify-center">
-          <select
-            className=" text-center w-32 font-medium px-2 py-1 rounded-xl border-collapse border-gray-300  text-white shadow-sm bg-blue-500 dark:bg-yellow-400 dark:text-black"
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
+            onClick={() => {
+              showCategory("all");
+              setSearchText(searchInputRef.current.value);
+            }}
+            className="font-medium px-4 py-1 rounded transition-all bg-blue-500 text-white hover:bg-blue-600 dark:bg-yellow-400 dark:text-black dark:hover:bg-yellow-500"
           >
-            <option value="en">English</option>
-            <option value="hi">हिंदी</option>
-            <option value="ta">தமிழ்</option>
-            <option value="te">తెలుగు</option>
-            <option value="mr">मराठी</option>
-          </select>
+            Search
+          </button>
+
+          <div className="flex justify-center">
+            <select
+              className=" text-center w-32 font-medium px-2 py-1 rounded-xl border-collapse border-gray-300  text-white shadow-sm bg-blue-500 dark:bg-yellow-400 dark:text-black"
+              value={selectedLanguage}
+              onChange={(e) => {
+                setSelectedLanguage(e.target.value);
+                setBatch(0);
+                showCategory("all");
+                setSearchText("");
+                clearSearchInput();
+              }}
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+              <option value="ta">தமிழ்</option>
+              <option value="te">తెలుగు</option>
+              {/* <option value="mr">मराठी</option> */}
+            </select>
           </div>
           {/* Theme Toggle */}
           <button

@@ -1,4 +1,3 @@
-
 const dns = require("dns");
 dns.setDefaultResultOrder("ipv4first");
 
@@ -15,65 +14,56 @@ const parser = new Parser({
   },
 });
 
-// 🔤 Source titles by language
 const sourceTitlesByLang = {
   ta: {
     "bbc": "பி.பி.சி தமிழ்",
-    "dailythanthi": "தினத்தந்தி",
-    "dinamalar": "தினமலர்",
+    "dinamani": "தினமணி",
+    "oneindia": "ஒன்று இந்தியா",
   },
   hi: {
     "bbc": "बीबीसी हिंदी",
-    "amarujala": "अमर उजाला",
-    "ndtv": "NDTV",
+    "news18": "न्यूज़18 हिंदी",
+    "ndtv": "एनडीटीवी",
   },
   en: {
-    "bbc": "BBC NEWS",
+    "indianexpress": "Indian Express",
     "timesofindia": "Times of India",
     "hindustantimes": "Hindustan Times",
   },
   mr: {
-    "marati.indiatimes" : "महाराष्ट्र टाइम्स",
-    "esakal" : "सकाळ",
-    "lokmat" : " लोकमत",
+    "marathi.indiatimes": "महाराष्ट्र टाइम्स",
+    "esakal": "सकाळ",
+    "lokmat": " लोकमत",
   },
   te: {
-    "oneindia" : "వన్‌ఇండియా తెలుగు",
+    "oneindia": "వన్‌ఇండియా తెలుగు",
     "hindustantimes": "హిందుస్తాన్ టైమ్స్ తెలుగు",
-    "sakshi" : "సాక్షి",
+    "sakshi": "సాక్షి",
   }
 };
 
-// 🔗 RSS Feeds by language
 const feedUrlsByLang = {
   ta: [
-    "https://rss.app/feeds/aSNzZyjfWhOwF9Zo.xml",
-    "https://rss.app/feeds/19D7vp0QsDiMETjr.xml",
-    "https://feeds.bbci.co.uk/tamil/rss.xml", // ❗ no trailing space
+    "https://beta.dinamani.com/api/v1/collections/latest-news.rss",
+    "https://feeds.bbci.co.uk/tamil/rss.xml",
+    "https://tamil.oneindia.com/rss/feeds/oneindia-tamil-fb.xml",
   ],
   hi: [
-    "https://rss.app/feeds/rMxSoDZPeLbaea2p.xml",
+    "https://feeds.feedburner.com/ndtvkhabar-latest",
     "https://feeds.bbci.co.uk/hindi/rss.xml",
-    "https://rss.app/feeds/h1ckrSLxqpkVALlD.xml",
+    "https://hindi.news18.com/rss/khabar/nation/nation.xml",
   ],
   en: [
-    "https://feeds.bbci.co.uk/news/world/asia/india/rss.xml",
+    "https://indianexpress.com/feed/",
     "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms",
     "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml",
-  ],
-  mr: [
-    "https://rss.app/feeds/Iq40IzDvlCzaixe5.xml",
-    "https://rss.app/feeds/rjcbJHTINnXymyCC.xml",
-    "https://rss.app/feeds/WT9dk78mnf3xbY8i.xml",
   ],
   te: [
     "https://telugu.oneindia.com/rss/feeds/oneindia-telugu-fb.xml",
     "https://telugu.hindustantimes.com/rss/andhra-pradesh",
-    "https://rss.app/feeds/SQy3tqry4w5ixkIh.xml",
   ]
 };
 
-// 🛠 Retry + Timeout
 function timeout(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms));
 }
@@ -93,7 +83,6 @@ async function fetchWithRetry(url, retries = 3, delay = 1000, timeoutMs = 7000) 
   }
 }
 
-// 🖼️ Image extractor
 function extractImageFromContent(content) {
   if (!content) return null;
   const match = content.match(/<img[^>]+src="([^">]+)"/);
@@ -101,18 +90,19 @@ function extractImageFromContent(content) {
 }
 
 function getImage(item) {
+  // console.log(item.StoryImage);
   return (
     item.enclosure?.url ||
     item["media:content"]?.url ||
     item["media:content"]?.$?.url ||
     item["media:thumbnail"]?.url ||
     item["media:thumbnail"]?.$?.url ||
+    // item.StoryImage?.[0]?.trim() ||
     extractImageFromContent(item.content || item["content:encoded"]) ||
     null
   );
 }
 
-// 📛 Detect source
 function detectSource(link, lang) {
   if (!link) return "Unknown";
   const map = sourceTitlesByLang[lang] || {};
@@ -122,14 +112,51 @@ function detectSource(link, lang) {
   return "Other Source";
 }
 
-// 🈲 Tamil detection
-function isTamil(text) {
-  return /[\u0B80-\u0BFF]/.test(text);
+
+// const fallback = "https://tse2.mm.bing.net/th/id/OIP.sujvaw9jN9QLxiubmM0MTQAAAA?rs=1&pid=ImgDetMain&o=7&rm=3";
+
+// 🗓️ Only today’s news
+function isToday(pubDateStr) {
+  const pubDate = new Date(pubDateStr);
+  const today = new Date();
+  return (
+    pubDate.getFullYear() === today.getFullYear() &&
+    pubDate.getMonth() === today.getMonth() &&
+    pubDate.getDate() === today.getDate()
+  );
+}
+function resolveImageUrl(originalImageUrl) {
+  if (!originalImageUrl) return null;
+
+  try {
+    const url = new URL(originalImageUrl);
+const domain = url.hostname.toLowerCase();
+
+// ✅ Skip ImageKit if image is from NDTV or Hindustan Times
+if (
+  domain.includes("ndtv.com") || 
+  domain.includes("ndtvimg.com") || 
+  domain.includes("hindustantimes.com")
+) {
+  return originalImageUrl;
 }
 
+
+    const encoded = encodeURIComponent(originalImageUrl);
+    const imageKitBase = "https://ik.imagekit.io/iqmavgtmx/tr:w-400,h-270,fo-auto/";
+    return `${imageKitBase}${encoded}`;
+  } catch (err) {
+    console.error("ImageKit URL resolution failed:", err.message);
+    return originalImageUrl;
+  }
+}
+
+
+
+
+
 // 📊 Main function
-async function parseFeeds(lang = "ta") {
-  console.log(lang);
+async function parseFeeds(lang = "en") {
   const allItems = [];
   const urls = feedUrlsByLang[lang] || [];
   if (urls.length === 0) return {};
@@ -139,16 +166,31 @@ async function parseFeeds(lang = "ta") {
       const feed = await fetchWithRetry(url);
       console.log(`✅ Parsed ${feed.items.length} items from ${url}`);
 
-      feed.items.forEach((item) => {
-        const description = item.contentSnippet || item.summary || item.description || "";
-        if (lang === "ta" && !isTamil(description)) return;
+      feed.items.forEach(async (item) => {
+        const pubDate = item.pubDate || feed.lastBuildDate;
+        if (!isToday(pubDate)) return; // ⛔ Skip old news
+
+        let description = item.contentSnippet || item.summary || item.description || "";
+        let title = item.title;
+        if (lang === "ta") {
+          const parts = title.split(" | ");
+          if (parts.length > 1) {
+            title = parts[1].trim();
+          }
+        }
+
+        let originalImageUrl = getImage(item);
+        let imageUrl =  resolveImageUrl(originalImageUrl);
+        // console.log(imageUrl);
+
+        // if(lang === "hi") console.log(image);
 
         allItems.push({
-          title: item.title,
+          title,
           description,
           link: item.link,
-          pubDate: item.pubDate,
-          image: getImage(item),
+          pubDate,
+          image:imageUrl,
           source: detectSource(item.link, lang),
         });
       });
@@ -157,7 +199,6 @@ async function parseFeeds(lang = "ta") {
     }
   }
 
-  // 🔁 Group dynamically
   const grouped = {};
   for (const item of allItems) {
     if (!grouped[item.source]) grouped[item.source] = [];
@@ -169,17 +210,10 @@ async function parseFeeds(lang = "ta") {
 
 // 🧪 CLI test
 if (require.main === module) {
-  parseFeeds("te").then((grouped) => {
+  parseFeeds("en").then((grouped) => {
     const allItems = Object.values(grouped).flat();
-    console.log("✅ Total News:", allItems.length);
-    // allItems.forEach((item, i) => {
-    //   console.log(`[${i + 1}] ${item.source}: ${item.title}`);
-    // });
+    console.log("✅ Total Today’s News:", allItems.length);
   });
 }
 
 module.exports = parseFeeds;
-
-
-
-

@@ -1,27 +1,44 @@
+
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import NewsCard from "./components/NewsCard";
 import BookmarksPage from "./components/BookmarksPage";
 
-// ✅ Moved outside App to fix eslint warning
-const fetchNews = async (batchNo = 0, lang = "en", setArticles, setBatch) => {
+const fetchNews = async (
+  batchNo = 0,
+  lang = "en",
+  setArticles,
+  setBatch,
+  category = "",
+  search = ""
+) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/rss?batch=${batchNo}&lang=${lang}`);
-    const data = await res.json();
-    const formatted = data.map(article => ({
+    const params = new URLSearchParams();
+    params.append("batch", batchNo);
+    params.append("lang", lang);
+    if (category && category !== "all") params.append("category", category);
+    if (search) params.append("search", search);
+console.log("🧠 fetchNews batch:", batchNo, "category:", category);
+    const res = await fetch(`http://localhost:5000/api/news?${params.toString()}`);
+  //  const res = await fetch(`http://localhost:5000/api/news?lang=${lang}&category=${category}&search=${search}`);
+const data = await res.json();
+
+    const formatted = data.map((article) => ({
       title: article.title,
       description: article.description,
-      imageUrl: article.image,
-      source: article.source,
-      url: article.link,
-      pubDate: article.pubDate,
+      imageUrl: article.image || article.urlToImage || "/default_news.jpg",
+      source: article.source?.name || article.source || "",
+      url: article.url || article.link,
+      pubDate: article.pubDate || article.publishedAt || "",
+      category: category || "all",
     }));
 
     if (batchNo === 0) {
       setArticles(formatted); // reset
-      setBatch(0);
+      // setBatch(0);
     } else {
-      setArticles(prev => [...prev, ...formatted]);
+      setArticles((prev) => [...prev, ...formatted]);
+      setBatch(batchNo);
     }
   } catch (err) {
     console.error("Failed to fetch news:", err);
@@ -39,10 +56,11 @@ export default function App() {
   const [batch, setBatch] = useState(0);
 
   useEffect(() => {
-    console.log("times");
-    fetchNews(0, selectedLanguage, setArticles, setBatch);
+     console.log("📡 useEffect triggered — category:", activeCategory);
+    fetchNews(0, selectedLanguage, setArticles, setBatch, activeCategory, searchText);
     fetchBookmarks();
-  }, [selectedLanguage]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [selectedLanguage, activeCategory, searchText]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -61,29 +79,38 @@ export default function App() {
   const refreshBookmarks = () => {
     fetchBookmarks();
   };
-
-  const filteredArticles = articles.filter(article => {
-    const matchesCategory = activeCategory === "all" || article.category === activeCategory;
-    const matchesSearch = article.title?.toLowerCase().includes(searchText.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const resetToHome = () => {
+  setActiveCategory("all");
+  setSearchText("");
+  fetchNews(0, selectedLanguage, setArticles, setBatch);
+   window.scrollTo({ top: 0, behavior: "smooth" });
+};
+  const handleCategoryChange = (cat) => {
+    console.log(cat);
+    setActiveCategory(cat);
+    setSearchText(""); 
+    setBatch(0); // optional: clear search when changing category
+    setArticles([]); // clear articles so new fetch starts from scratch
+  };
 
   const handleShowMore = () => {
     const nextBatch = batch + 1;
-    fetchNews(nextBatch, selectedLanguage, setArticles, setBatch);
+    fetchNews(nextBatch, selectedLanguage, setArticles, setBatch, activeCategory, searchText);
   };
 
   return (
     <div className="min-h-[100dvh] bg-[#f9f9f9] text-black dark:bg-[#0d1117] dark:text-white">
       <Navbar
         activeCategory={activeCategory}
-        showCategory={setActiveCategory}
+        showCategory={handleCategoryChange}
         searchText={searchText}
         setSearchText={setSearchText}
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
+        setBatch={setBatch}
         isDark={isDark}
         setIsDark={setIsDark}
+        resetToHome={resetToHome}
       />
 
       <div className="flex justify-center gap-4 py-4 text-white">
@@ -111,16 +138,16 @@ export default function App() {
 
       <main className="w-full max-w-[1200px] mx-auto px-2 sm:px-4 lg:px-0 py-8">
         {page === "home" ? (
-          filteredArticles.length === 0 ? (
+          articles.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-200">No articles found.</p>
           ) : (
             <>
               <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredArticles.map((article, idx) => (
+                {articles.map((article, idx) => (
                   <NewsCard
                     key={idx}
                     {...article}
-                    isBookmarked={bookmarks.some(b => b.link === article.url)}
+                    isBookmarked={bookmarks.some((b) => b.link === article.url)}
                     refreshBookmarks={refreshBookmarks}
                   />
                 ))}
@@ -143,4 +170,3 @@ export default function App() {
     </div>
   );
 }
-
