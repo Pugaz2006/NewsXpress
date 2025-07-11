@@ -19,7 +19,7 @@ const fetchNews = async (
     if (category && category !== "all") params.append("category", category);
     if (search) params.append("search", search);
 console.log("🧠 fetchNews batch:", batchNo, "category:", category);
-    const res = await fetch(`http://localhost:5000/api/news?${params.toString()}`);
+    const res = await fetch(`https://newsxpress-backend.onrender.com/api/news?${params.toString()}`);
   //  const res = await fetch(`http://localhost:5000/api/news?lang=${lang}&category=${category}&search=${search}`);
 const data = await res.json();
 
